@@ -20,8 +20,8 @@ export default function Home() {
           <p className="text-gray-500 font-medium mt-1">Your fun writing adventure starts here!</p>
         </div>
 
-        {/* Image always visible */}
-        <ImageCard image={image} onShuffle={shuffleImage} showShuffle={phase === "writing"} />
+        {/* Image — only rendered after client mount to avoid hydration mismatch */}
+        {image && <ImageCard image={image} onShuffle={shuffleImage} showShuffle={phase === "writing"} />}
 
         {/* Phase-based content */}
         {phase === "writing" && (
