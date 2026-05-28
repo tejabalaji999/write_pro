@@ -1,12 +1,15 @@
 "use client";
 
-import { FeedbackResult } from "@/lib/types";
+import { FeedbackResult, GradeGroup } from "@/lib/types";
 import { ScoreMeter } from "./ScoreMeter";
 import { CategoryCard } from "./CategoryCard";
+import { SampleSentences } from "./SampleSentences";
 
 interface Props {
   feedback: FeedbackResult;
   onReset: () => void;
+  imageCategory: string;
+  grade: GradeGroup;
 }
 
 const CATEGORY_STYLES = {
@@ -16,7 +19,7 @@ const CATEGORY_STYLES = {
   creativity: { borderColor: "border-pink-300", bgColor: "bg-pink-50", scoreColor: "bg-pink-100 text-pink-700" },
 };
 
-export function FeedbackPanel({ feedback, onReset }: Props) {
+export function FeedbackPanel({ feedback, onReset, imageCategory, grade }: Props) {
   const { overallScore, overallMessage, categories, improvements, starWord } = feedback;
 
   return (
@@ -62,6 +65,9 @@ export function FeedbackPanel({ feedback, onReset }: Props) {
           ))}
         </ul>
       </div>
+
+      {/* Sample Sentences */}
+      <SampleSentences imageCategory={imageCategory} grade={grade} />
 
       {/* Try Again */}
       <button

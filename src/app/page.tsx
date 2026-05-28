@@ -49,8 +49,8 @@ export default function Home() {
 
         {phase === "loading" && <LoadingSpinner />}
 
-        {phase === "feedback" && feedback && (
-          <FeedbackPanel feedback={feedback} onReset={reset} />
+        {phase === "feedback" && feedback && grade && (
+          <FeedbackPanel feedback={feedback} onReset={reset} imageCategory={image?.category ?? "general"} grade={grade} />
         )}
       </div>
     </main>
