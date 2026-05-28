@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-const client = new Anthropic();
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 function buildPrompt(imageCategory: string, text: string): string {
   return `You are a friendly and encouraging writing coach for children aged 7–12.
@@ -63,15 +63,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please write a bit more!" }, { status: 400 });
     }
 
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: buildPrompt(imageCategory || "general", text) }],
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(buildPrompt(imageCategory || "general", text));
+    const raw = result.response.text().trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    const feedback = JSON.parse(raw);
 
-    const raw = (message.content[0] as { type: "text"; text: string }).text;
-    const result = JSON.parse(raw);
-    return NextResponse.json(result);
+    return NextResponse.json(feedback);
   } catch (err) {
     console.error("Analyze error:", err);
     return NextResponse.json(
