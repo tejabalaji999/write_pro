@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please write a bit more!" }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
     const result = await model.generateContent(buildPrompt(imageCategory || "general", text));
     const raw = result.response.text().trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
     const feedback = JSON.parse(raw);
