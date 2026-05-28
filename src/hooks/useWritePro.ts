@@ -1,21 +1,43 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { ImageConfig, FeedbackResult, GradeGroup } from "@/lib/types";
+import { ImageConfig, FeedbackResult, GradeGroup, AttemptLog } from "@/lib/types";
 import { getRandomImageUrl } from "@/lib/images";
 
-export type Phase = "grade" | "writing" | "loading" | "feedback";
+export type Phase = "name" | "grade" | "writing" | "loading" | "feedback";
+
+const STORAGE_KEY = "writepro_logs";
+
+function loadLogs(): AttemptLog[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveLogs(logs: AttemptLog[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+}
 
 export function useWritePro() {
-  const [phase, setPhase] = useState<Phase>("grade");
+  const [phase, setPhase] = useState<Phase>("name");
+  const [name, setName] = useState("");
   const [grade, setGrade] = useState<GradeGroup | null>(null);
   const [image, setImage] = useState<ImageConfig | null>(null);
   const [text, setText] = useState("");
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<AttemptLog[]>([]);
 
   useEffect(() => {
     setImage(getRandomImageUrl());
+    setLogs(loadLogs());
+  }, []);
+
+  const submitName = useCallback((n: string) => {
+    setName(n);
+    setPhase("grade");
   }, []);
 
   const selectGrade = useCallback((g: GradeGroup) => {
@@ -42,11 +64,27 @@ export function useWritePro() {
       if (!res.ok) throw new Error(data.error || "Analysis failed");
       setFeedback(data);
       setPhase("feedback");
+
+      // Save to log
+      const entry: AttemptLog = {
+        id: Date.now().toString(),
+        name,
+        grade: grade!,
+        imageCategory: image?.category ?? "general",
+        score: data.overallScore,
+        starWord: data.starWord ?? "",
+        timestamp: Date.now(),
+      };
+      setLogs((prev) => {
+        const updated = [...prev, entry];
+        saveLogs(updated);
+        return updated;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again!");
       setPhase("writing");
     }
-  }, [image?.category, text, grade]);
+  }, [image?.category, text, grade, name]);
 
   const reset = useCallback(() => {
     setImage(getRandomImageUrl());
@@ -54,8 +92,16 @@ export function useWritePro() {
     setFeedback(null);
     setError(null);
     setGrade(null);
-    setPhase("grade");
+    setPhase("grade"); // keep name, just pick new grade
   }, []);
 
-  return { phase, grade, image, text, setText, feedback, error, selectGrade, shuffleImage, submitWriting, reset };
+  const clearLogs = useCallback(() => {
+    setLogs([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  return {
+    phase, name, grade, image, text, setText, feedback, error, logs,
+    submitName, selectGrade, shuffleImage, submitWriting, reset, clearLogs,
+  };
 }

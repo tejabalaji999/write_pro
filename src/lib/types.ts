@@ -8,6 +8,16 @@ export interface GradeGroupConfig {
   gradient: string;
 }
 
+export interface AttemptLog {
+  id: string;
+  name: string;
+  grade: GradeGroup;
+  imageCategory: string;
+  score: number;
+  starWord: string;
+  timestamp: number;
+}
+
 export interface ImageConfig {
   src: string;
   category: string;
