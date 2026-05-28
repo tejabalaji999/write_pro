@@ -5,9 +5,10 @@ import { ImageCard } from "@/components/ImageCard";
 import { WritingArea } from "@/components/WritingArea";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { GradeSelector } from "@/components/GradeSelector";
 
 export default function Home() {
-  const { phase, image, text, setText, feedback, error, shuffleImage, submitWriting, reset } = useWritePro();
+  const { phase, grade, image, text, setText, feedback, error, selectGrade, shuffleImage, submitWriting, reset } = useWritePro();
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-violet-100 via-pink-50 to-yellow-50 py-8 px-4">
@@ -20,11 +21,16 @@ export default function Home() {
           <p className="text-gray-500 font-medium mt-1">Your fun writing adventure starts here!</p>
         </div>
 
-        {/* Image — only rendered after client mount to avoid hydration mismatch */}
-        {image && <ImageCard image={image} onShuffle={shuffleImage} showShuffle={phase === "writing"} />}
+        {/* Grade selection */}
+        {phase === "grade" && <GradeSelector onSelect={selectGrade} />}
 
-        {/* Phase-based content */}
-        {phase === "writing" && (
+        {/* Image — shown once grade is selected */}
+        {phase !== "grade" && image && (
+          <ImageCard image={image} onShuffle={shuffleImage} showShuffle={phase === "writing"} />
+        )}
+
+        {/* Writing phase */}
+        {phase === "writing" && grade && (
           <>
             {error && (
               <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 text-red-600 font-medium text-sm text-center">
@@ -36,6 +42,7 @@ export default function Home() {
               onChange={setText}
               onSubmit={submitWriting}
               disabled={false}
+              grade={grade}
             />
           </>
         )}

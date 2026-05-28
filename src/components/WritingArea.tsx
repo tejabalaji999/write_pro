@@ -1,15 +1,31 @@
 "use client";
 
+import { GradeGroup } from "@/lib/types";
+import { getHintSentences } from "@/lib/grades";
+
 interface Props {
   text: string;
   onChange: (val: string) => void;
   onSubmit: () => void;
   disabled: boolean;
+  grade: GradeGroup;
 }
 
-export function WritingArea({ text, onChange, onSubmit, disabled }: Props) {
+function renderHint(sentence: string) {
+  const parts = sentence.split(/(\[[^\]]+\])/g);
+  return parts.map((part, i) =>
+    part.startsWith("[") ? (
+      <em key={i} className="text-yellow-700 not-italic font-bold">{part}</em>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
+export function WritingArea({ text, onChange, onSubmit, disabled, grade }: Props) {
   const charCount = text.length;
   const ready = charCount >= 30;
+  const [hint1, hint2] = getHintSentences(grade);
 
   return (
     <div className="bg-white rounded-3xl shadow-xl border-4 border-purple-200 p-5 flex flex-col gap-3">
@@ -19,6 +35,15 @@ export function WritingArea({ text, onChange, onSubmit, disabled }: Props) {
           {charCount} chars
         </span>
       </div>
+
+      {/* Hint card */}
+      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-3 flex flex-col gap-1">
+        <p className="text-yellow-700 font-extrabold text-xs">💡 Need a starter idea?</p>
+        <p className="text-gray-600 text-sm leading-relaxed">{renderHint(hint1)}</p>
+        <p className="text-gray-600 text-sm leading-relaxed">{renderHint(hint2)}</p>
+        <p className="text-yellow-500 text-xs font-medium mt-0.5">Don&apos;t copy — just get inspired! ✨</p>
+      </div>
+
       <textarea
         value={text}
         onChange={(e) => onChange(e.target.value)}

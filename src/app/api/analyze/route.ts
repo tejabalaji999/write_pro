@@ -1,11 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { GradeGroup } from "@/lib/types";
+import { getPromptContext } from "@/lib/grades";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-function buildPrompt(imageCategory: string, text: string): string {
-  return `You are a friendly and encouraging writing coach for children aged 7–12.
-A child has written a description of an image from the category: "${imageCategory}".
+function buildPrompt(imageCategory: string, text: string, grade: GradeGroup): string {
+  return `You are a friendly and encouraging writing coach for kids.
+${getPromptContext(grade)}
+A student has written a description of an image from the category: "${imageCategory}".
 
 Their writing:
 """
@@ -44,27 +47,28 @@ Analyze the writing and respond ONLY with a valid JSON object — no markdown, n
     "<Specific, actionable tip #2>",
     "<Specific, actionable tip #3>"
   ],
-  "starWord": "<Pick the single most impressive word the child used and celebrate it>"
+  "starWord": "<Pick the single most impressive word the student used and celebrate it>"
 }
 
 Rules:
 - Never say anything negative or discouraging.
 - Always lead with what they did RIGHT before suggesting improvements.
-- Use simple vocabulary a 9-year-old can understand.
 - Keep each feedback string under 60 words.
-- Scores should be honest but generous — a short but grammatically correct sentence deserves at least 60.`;
+- Adjust all scores and feedback to match the grade level context above.
+- Scores should be honest but generous for the grade level.`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageCategory, text } = await req.json();
+    const { imageCategory, text, grade } = await req.json();
 
     if (!text || text.trim().length < 10) {
       return NextResponse.json({ error: "Please write a bit more!" }, { status: 400 });
     }
 
+    const effectiveGrade: GradeGroup = grade ?? "3-4";
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const result = await model.generateContent(buildPrompt(imageCategory || "general", text));
+    const result = await model.generateContent(buildPrompt(imageCategory || "general", text, effectiveGrade));
     const raw = result.response.text().trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
     const feedback = JSON.parse(raw);
 
