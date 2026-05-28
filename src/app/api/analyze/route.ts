@@ -70,10 +70,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(feedback);
   } catch (err) {
-    console.error("Analyze error:", err);
-    return NextResponse.json(
-      { error: "Oops! We had trouble reading your writing. Please try again!" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Analyze error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
