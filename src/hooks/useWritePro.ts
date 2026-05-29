@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { ImageConfig, FeedbackResult, GradeGroup, AttemptLog } from "@/lib/types";
+import { ImageConfig, FeedbackResult, GradeGroup, AttemptLog, AIProvider } from "@/lib/types";
 import { getRandomImageUrl } from "@/lib/images";
 
 export type Phase = "name" | "grade" | "writing" | "loading" | "feedback";
@@ -29,6 +29,7 @@ export function useWritePro() {
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<AttemptLog[]>([]);
+  const [provider, setProvider] = useState<AIProvider>("gemini");
 
   useEffect(() => {
     setImage(getRandomImageUrl());
@@ -58,7 +59,7 @@ export function useWritePro() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageCategory: image?.category, text, grade }),
+        body: JSON.stringify({ imageCategory: image?.category, text, grade, provider }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed");
@@ -84,7 +85,7 @@ export function useWritePro() {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again!");
       setPhase("writing");
     }
-  }, [image?.category, text, grade, name]);
+  }, [image?.category, text, grade, name, provider]);
 
   const reset = useCallback(() => {
     setImage(getRandomImageUrl());
@@ -101,7 +102,7 @@ export function useWritePro() {
   }, []);
 
   return {
-    phase, name, grade, image, text, setText, feedback, error, logs,
+    phase, name, grade, image, text, setText, feedback, error, logs, provider, setProvider,
     submitName, selectGrade, shuffleImage, submitWriting, reset, clearLogs,
   };
 }

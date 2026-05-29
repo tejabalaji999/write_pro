@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { GradeGroup } from "@/lib/types";
+import { GradeGroup, AIProvider } from "@/lib/types";
 
 interface Props {
   imageCategory: string;
   grade: GradeGroup;
+  provider: AIProvider;
 }
 
-export function SampleSentences({ imageCategory, grade }: Props) {
+export function SampleSentences({ imageCategory, grade, provider }: Props) {
   const [sentences, setSentences] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,7 @@ export function SampleSentences({ imageCategory, grade }: Props) {
       const res = await fetch("/api/sample-sentences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageCategory, grade }),
+        body: JSON.stringify({ imageCategory, grade, provider }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate");

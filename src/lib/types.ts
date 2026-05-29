@@ -1,4 +1,5 @@
 export type GradeGroup = "1-2" | "3-4" | "5-6" | "7-8";
+export type AIProvider = "gemini" | "chatgpt";
 
 export interface GradeGroupConfig {
   id: GradeGroup;

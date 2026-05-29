@@ -8,10 +8,11 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { GradeSelector } from "@/components/GradeSelector";
 import { NameEntry } from "@/components/NameEntry";
 import { AttemptHistory } from "@/components/AttemptHistory";
+import { ProviderToggle } from "@/components/ProviderToggle";
 
 export default function Home() {
   const {
-    phase, name, grade, image, text, setText, feedback, error, logs,
+    phase, name, grade, image, text, setText, feedback, error, logs, provider, setProvider,
     submitName, selectGrade, shuffleImage, submitWriting, reset, clearLogs,
   } = useWritePro();
 
@@ -20,14 +21,17 @@ export default function Home() {
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
 
         {/* Header */}
-        <div className="text-center">
+        <div className="text-center flex flex-col gap-2">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
             ✍️ WritePro
           </h1>
           {name ? (
-            <p className="text-gray-500 font-medium mt-1">Hi, <span className="font-extrabold text-purple-600">{name}</span>! Let&apos;s write something awesome!</p>
+            <p className="text-gray-500 font-medium">Hi, <span className="font-extrabold text-purple-600">{name}</span>! Let&apos;s write something awesome!</p>
           ) : (
-            <p className="text-gray-500 font-medium mt-1">Your fun writing adventure starts here!</p>
+            <p className="text-gray-500 font-medium">Your fun writing adventure starts here!</p>
+          )}
+          {phase !== "name" && (
+            <ProviderToggle provider={provider} onChange={setProvider} />
           )}
         </div>
 
@@ -68,10 +72,11 @@ export default function Home() {
             onReset={reset}
             imageCategory={image?.category ?? "general"}
             grade={grade}
+            provider={provider}
           />
         )}
 
-        {/* Attempt history — visible in all phases except name entry */}
+        {/* Attempt history */}
         {phase !== "name" && (
           <AttemptHistory logs={logs} onClear={clearLogs} />
         )}

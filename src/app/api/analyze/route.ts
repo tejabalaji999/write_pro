@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
-import { GradeGroup } from "@/lib/types";
+import { GradeGroup, AIProvider } from "@/lib/types";
 import { getPromptContext } from "@/lib/grades";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { callAI } from "@/lib/ai";
 
 function buildPrompt(imageCategory: string, text: string, grade: GradeGroup): string {
   return `You are a friendly and encouraging writing coach for kids.
@@ -60,17 +58,18 @@ Rules:
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageCategory, text, grade } = await req.json();
+    const { imageCategory, text, grade, provider } = await req.json();
 
     if (!text || text.trim().length < 10) {
       return NextResponse.json({ error: "Please write a bit more!" }, { status: 400 });
     }
 
     const effectiveGrade: GradeGroup = grade ?? "3-4";
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const result = await model.generateContent(buildPrompt(imageCategory || "general", text, effectiveGrade));
-    const raw = result.response.text().trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
-    const feedback = JSON.parse(raw);
+    const effectiveProvider: AIProvider = provider ?? "gemini";
+
+    const raw = await callAI(effectiveProvider, buildPrompt(imageCategory || "general", text, effectiveGrade));
+    const cleaned = raw.trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    const feedback = JSON.parse(cleaned);
 
     return NextResponse.json(feedback);
   } catch (err) {

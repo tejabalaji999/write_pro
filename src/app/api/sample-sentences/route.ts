@@ -1,14 +1,13 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
-import { GradeGroup } from "@/lib/types";
+import { GradeGroup, AIProvider } from "@/lib/types";
 import { getPromptContext } from "@/lib/grades";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { callAI } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageCategory, grade } = await req.json();
+    const { imageCategory, grade, provider } = await req.json();
     const effectiveGrade: GradeGroup = grade ?? "3-4";
+    const effectiveProvider: AIProvider = provider ?? "gemini";
 
     const prompt = `You are a friendly writing coach for kids.
 ${getPromptContext(effectiveGrade)}
@@ -25,10 +24,9 @@ Rules:
 - Use vocabulary appropriate for the grade level.
 - Vary sentence structure across the 4 examples.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const result = await model.generateContent(prompt);
-    const raw = result.response.text().trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
-    const sentences: string[] = JSON.parse(raw);
+    const raw = await callAI(effectiveProvider, prompt);
+    const cleaned = raw.trim().replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    const sentences: string[] = JSON.parse(cleaned);
 
     return NextResponse.json({ sentences });
   } catch (err) {
